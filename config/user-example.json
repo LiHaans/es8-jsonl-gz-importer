@@ -1,0 +1,18 @@
+{
+  "jobName": "user",
+  "inputDir": "/data/user_data",
+  "indexName": "user_index",
+  "esHosts": ["http://127.0.0.1:9200"],
+  "idField": "user_id",
+  "fileParallelism": 2,
+  "writerParallelism": 4,
+  "batchDocLimit": 3000,
+  "batchBytesLimit": 8388608,
+  "queueCapacity": 150,
+  "maxRetries": 5,
+  "retryBaseMillis": 1000,
+  "checkpointDbPath": "./runtime/user-checkpoints.db",
+  "deadLetterDir": "./runtime/deadletter",
+  "checkpointFlushEveryLines": 1000,
+  "metricsLogIntervalSeconds": 15
+}

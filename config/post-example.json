@@ -1,0 +1,18 @@
+{
+  "jobName": "post",
+  "inputDir": "/data/post_data",
+  "indexName": "post_index",
+  "esHosts": ["http://127.0.0.1:9200"],
+  "idField": "post_id",
+  "fileParallelism": 2,
+  "writerParallelism": 4,
+  "batchDocLimit": 1500,
+  "batchBytesLimit": 6291456,
+  "queueCapacity": 120,
+  "maxRetries": 5,
+  "retryBaseMillis": 1000,
+  "checkpointDbPath": "./runtime/post-checkpoints.db",
+  "deadLetterDir": "./runtime/deadletter",
+  "checkpointFlushEveryLines": 1000,
+  "metricsLogIntervalSeconds": 15
+}

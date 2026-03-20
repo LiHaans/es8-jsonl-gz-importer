@@ -1,0 +1,18 @@
+{
+  "jobName": "relation",
+  "inputDir": "/data/relation_data",
+  "indexName": "relation_index",
+  "idField": "relation_id",
+  "esHosts": ["http://127.0.0.1:9200"],
+  "fileParallelism": 2,
+  "writerParallelism": 4,
+  "batchDocLimit": 4000,
+  "batchBytesLimit": 8388608,
+  "queueCapacity": 150,
+  "maxRetries": 5,
+  "retryBaseMillis": 1000,
+  "checkpointDbPath": "./runtime/relation-checkpoints.db",
+  "deadLetterDir": "./runtime/deadletter",
+  "checkpointFlushEveryLines": 1000,
+  "metricsLogIntervalSeconds": 15
+}
