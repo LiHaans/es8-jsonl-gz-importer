@@ -5,7 +5,7 @@
 
     <groupId>com.github.lihaans</groupId>
     <artifactId>es8-jsonl-gz-importer</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>es8-jsonl-gz-importer</name>
@@ -20,7 +20,6 @@
         <slf4j.version>1.7.36</slf4j.version>
         <logback.version>1.2.13</logback.version>
         <elasticsearch.version>8.15.2</elasticsearch.version>
-        <httpclient5.version>5.3.1</httpclient5.version>
     </properties>
 
     <dependencies>
@@ -30,9 +29,9 @@
             <version>${elasticsearch.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-            <version>${httpclient5.version}</version>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-client</artifactId>
+            <version>${elasticsearch.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

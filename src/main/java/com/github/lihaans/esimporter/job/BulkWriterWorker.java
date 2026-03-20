@@ -38,7 +38,10 @@ public class BulkWriterWorker implements Runnable {
                     continue;
                 }
                 BulkIndexer.BulkWriteResult result = bulkIndexer.write(batch);
-                checkpointStore.updateProgress(config.getJobName(), batch.getFilePath(), batch.getEndLine(), result.getSuccessCount(), result.getFailedCount(), result.getLastSuccessLine());
+                checkpointStore.addWriteResult(config.getJobName(), batch.getFilePath(), result.getSuccessCount(), result.getFailedCount(), result.getLastSuccessLine());
+                if (result.getLastSuccessLine() >= batch.getEndLine()) {
+                    checkpointStore.markDone(config.getJobName(), batch.getFilePath());
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;

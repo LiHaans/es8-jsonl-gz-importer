@@ -62,7 +62,7 @@ public class SqliteCheckpointStore implements CheckpointStore {
 
     @Override
     public List<FileTask> loadPendingFiles(String jobName) {
-        String sql = "SELECT file_path,file_size,status,processed_lines,success_lines,failed_lines,last_success_line FROM file_task WHERE job_name=? AND status IN ('NEW','FAILED','PARTIAL') ORDER BY file_path";
+        String sql = "SELECT file_path,file_size,status,processed_lines,success_lines,failed_lines,last_success_line FROM file_task WHERE job_name=? AND status IN ('NEW','FAILED','PARTIAL','RUNNING') ORDER BY file_path";
         List<FileTask> tasks = new ArrayList<FileTask>();
         try (Connection conn = connection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, jobName);
@@ -89,33 +89,41 @@ public class SqliteCheckpointStore implements CheckpointStore {
     }
 
     @Override
-    public void updateProgress(String jobName, String filePath, long processedLines, long successLines, long failedLines, long lastSuccessLine) {
-        String sql = "UPDATE file_task SET status=?, processed_lines=?, success_lines=?, failed_lines=?, last_success_line=? WHERE job_name=? AND file_path=?";
+    public void updateReadProgress(String jobName, String filePath, long processedLines, long failedLines) {
+        String sql = "UPDATE file_task SET status='PARTIAL', processed_lines=?, failed_lines=? WHERE job_name=? AND file_path=?";
         try (Connection conn = connection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, "PARTIAL");
-            ps.setLong(2, processedLines);
-            ps.setLong(3, successLines);
-            ps.setLong(4, failedLines);
-            ps.setLong(5, lastSuccessLine);
-            ps.setString(6, jobName);
-            ps.setString(7, filePath);
+            ps.setLong(1, processedLines);
+            ps.setLong(2, failedLines);
+            ps.setString(3, jobName);
+            ps.setString(4, filePath);
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to update progress", e);
+            throw new RuntimeException("Failed to update read progress", e);
         }
     }
 
     @Override
-    public void markDone(String jobName, String filePath, long processedLines, long successLines, long failedLines, long lastSuccessLine) {
-        String sql = "UPDATE file_task SET status=?, processed_lines=?, success_lines=?, failed_lines=?, last_success_line=?, last_error=NULL WHERE job_name=? AND file_path=?";
+    public void addWriteResult(String jobName, String filePath, long successDelta, long failedDelta, long lastSuccessLine) {
+        String sql = "UPDATE file_task SET status='PARTIAL', success_lines=success_lines+?, failed_lines=failed_lines+?, last_success_line=CASE WHEN last_success_line < ? THEN ? ELSE last_success_line END WHERE job_name=? AND file_path=?";
         try (Connection conn = connection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, "DONE");
-            ps.setLong(2, processedLines);
-            ps.setLong(3, successLines);
-            ps.setLong(4, failedLines);
-            ps.setLong(5, lastSuccessLine);
-            ps.setString(6, jobName);
-            ps.setString(7, filePath);
+            ps.setLong(1, successDelta);
+            ps.setLong(2, failedDelta);
+            ps.setLong(3, lastSuccessLine);
+            ps.setLong(4, lastSuccessLine);
+            ps.setString(5, jobName);
+            ps.setString(6, filePath);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to add write result", e);
+        }
+    }
+
+    @Override
+    public void markDone(String jobName, String filePath) {
+        String sql = "UPDATE file_task SET status='DONE', last_error=NULL WHERE job_name=? AND file_path=?";
+        try (Connection conn = connection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, jobName);
+            ps.setString(2, filePath);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to mark done", e);

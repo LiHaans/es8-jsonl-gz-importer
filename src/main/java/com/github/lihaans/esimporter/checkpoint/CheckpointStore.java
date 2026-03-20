@@ -9,7 +9,8 @@ public interface CheckpointStore {
     void registerFiles(String jobName, List<FileTask> files);
     List<FileTask> loadPendingFiles(String jobName);
     void markRunning(String jobName, String filePath);
-    void updateProgress(String jobName, String filePath, long processedLines, long successLines, long failedLines, long lastSuccessLine);
-    void markDone(String jobName, String filePath, long processedLines, long successLines, long failedLines, long lastSuccessLine);
+    void updateReadProgress(String jobName, String filePath, long processedLines, long failedLines);
+    void addWriteResult(String jobName, String filePath, long successDelta, long failedDelta, long lastSuccessLine);
+    void markDone(String jobName, String filePath);
     void markFailed(String jobName, String filePath, String errorMessage);
 }

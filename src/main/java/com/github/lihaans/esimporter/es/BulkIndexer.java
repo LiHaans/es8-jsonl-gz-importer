@@ -1,11 +1,11 @@
 package com.github.lihaans.esimporter.es;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.util.BinaryData;
 import com.github.lihaans.esimporter.config.JobConfig;
 import com.github.lihaans.esimporter.deadletter.DeadLetterWriter;
 import com.github.lihaans.esimporter.metrics.MetricsCollector;
@@ -15,6 +15,8 @@ import com.github.lihaans.esimporter.util.BackoffUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,12 +87,17 @@ public class BulkIndexer {
     private BulkRequest buildRequest(List<DocumentRecord> records) {
         List<BulkOperation> operations = new ArrayList<BulkOperation>(records.size());
         for (DocumentRecord record : records) {
+            BinaryData document = BinaryData.of(Json.createReader(new StringReader(record.getSourceJson())).readValue());
             BulkOperation operation = new BulkOperation.Builder()
-                    .index(idx -> idx
-                            .index(record.getIndex())
-                            .id(record.getId())
-                            .routing(record.getRouting())
-                            .document(record.getSourceJson()))
+                    .index(idx -> {
+                        idx.index(record.getIndex());
+                        idx.id(record.getId());
+                        if (record.getRouting() != null && !record.getRouting().trim().isEmpty()) {
+                            idx.routing(record.getRouting());
+                        }
+                        idx.document(document);
+                        return idx;
+                    })
                     .build();
             operations.add(operation);
         }

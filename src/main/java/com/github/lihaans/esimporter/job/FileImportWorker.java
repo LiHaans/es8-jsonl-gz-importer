@@ -47,9 +47,8 @@ public class FileImportWorker implements Runnable {
     public void run() {
         checkpointStore.markRunning(config.getJobName(), task.getFilePath());
         long processed = task.getProcessedLines();
-        long success = task.getSuccessLines();
         long failed = task.getFailedLines();
-        long lastSuccessLine = task.getLastSuccessLine();
+        long resumeFrom = task.getLastSuccessLine();
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(new GZIPInputStream(new FileInputStream(task.getFilePath())), StandardCharsets.UTF_8), 64 * 1024)) {
             BulkBatchBuilder builder = new BulkBatchBuilder(config, task.getFilePath());
@@ -57,7 +56,7 @@ public class FileImportWorker implements Runnable {
             long lineNo = 0;
             while ((line = reader.readLine()) != null) {
                 lineNo++;
-                if (lineNo <= lastSuccessLine) {
+                if (lineNo <= resumeFrom) {
                     continue;
                 }
                 processed++;
@@ -73,13 +72,13 @@ public class FileImportWorker implements Runnable {
                     deadLetterWriter.write(config.getJobName(), task.getFilePath(), lineNo, line, "parse_error", e.getMessage());
                 }
                 if (processed % config.getCheckpointFlushEveryLines() == 0) {
-                    checkpointStore.updateProgress(config.getJobName(), task.getFilePath(), processed, success, failed, lastSuccessLine);
+                    checkpointStore.updateReadProgress(config.getJobName(), task.getFilePath(), processed, failed);
                 }
             }
             if (!builder.isEmpty()) {
                 queue.put(builder.buildAndReset());
             }
-            checkpointStore.updateProgress(config.getJobName(), task.getFilePath(), processed, success, failed, lastSuccessLine);
+            checkpointStore.updateReadProgress(config.getJobName(), task.getFilePath(), processed, failed);
             log.info("finished reading file={}", task.getFilePath());
         } catch (Exception e) {
             checkpointStore.markFailed(config.getJobName(), task.getFilePath(), e.getMessage());

@@ -62,13 +62,13 @@ mvn clean package
 产物：
 
 ```bash
-target/es8-jsonl-gz-importer-1.0.0-jar-with-dependencies.jar
+target/es8-jsonl-gz-importer-1.0.1-jar-with-dependencies.jar
 ```
 
 ### 3. 运行
 
 ```bash
-java -jar target/es8-jsonl-gz-importer-1.0.0-jar-with-dependencies.jar config/comment-example.json
+java -jar target/es8-jsonl-gz-importer-1.0.1-jar-with-dependencies.jar config/comment-example.json
 ```
 
 ## 断点续传
