@@ -15,8 +15,6 @@ import com.github.lihaans.esimporter.util.BackoffUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.Json;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,7 +85,7 @@ public class BulkIndexer {
     private BulkRequest buildRequest(List<DocumentRecord> records) {
         List<BulkOperation> operations = new ArrayList<BulkOperation>(records.size());
         for (DocumentRecord record : records) {
-            BinaryData document = BinaryData.of(Json.createReader(new StringReader(record.getSourceJson())).readValue());
+            BinaryData document = BinaryData.of(record.getSourceJson().getBytes(java.nio.charset.StandardCharsets.UTF_8), "application/json");
             BulkOperation operation = new BulkOperation.Builder()
                     .index(idx -> {
                         idx.index(record.getIndex());
